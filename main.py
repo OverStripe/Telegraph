@@ -49,7 +49,7 @@ def upload_to_telegraph(image_url):
 # Handle the /start command to greet the user
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, "Welcome! Simply upload an image, and I'll convert it to a Telegraph link.")
+    bot.send_message(message.chat.id, "Welcome! Simply upload an image, and I'll convert it to a Telegraph link.")
 
 # Handle image uploads automatically
 @bot.message_handler(content_types=['photo'])
@@ -67,11 +67,11 @@ def handle_image(message):
         telegraph_url = upload_to_telegraph(image_url)
         
         if telegraph_url:
-            bot.reply_to(message, f"Here is your Telegraph link: {telegraph_url}")
+            bot.send_message(message.chat.id, f"Here is your Telegraph link: {telegraph_url}")
         else:
-            bot.reply_to(message, "Failed to upload the image to Telegraph. Please try again.")
+            bot.send_message(message.chat.id, "Failed to upload the image to Telegraph. Please try again.")
     except Exception as e:
-        bot.reply_to(message, "An error occurred while processing the image.")
+        bot.send_message(message.chat.id, "An error occurred while processing the image.")
         print(f"Error: {e}")
 
 # Start polling for messages

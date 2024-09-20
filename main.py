@@ -1,55 +1,40 @@
 import telebot
-from telegraph import Telegraph
 import requests
 import os
 
-# Initialize the bot with your Telegram API token and the Telegraph API
+# Initialize the bot with your Telegram API token
 bot = telebot.TeleBot('7461790177:AAFrplKOYxxAF8X-zSigAB8_zFDsORBMjm4')
-telegraph = Telegraph()
-telegraph.create_account(short_name='YourBot')
 
-# Function to upload the image to Telegraph and get the URL
-def upload_to_telegraph(image_url):
+# Function to upload the image to Postimages and get the URL
+def upload_to_postimages(image_path):
     try:
-        print(f"Downloading image from: {image_url}")
-        image_response = requests.get(image_url)
-        if image_response.status_code != 200:
-            print(f"Failed to download image from Telegram. Status code: {image_response.status_code}")
+        print(f"Uploading image to Postimages: {image_path}")
+        
+        # Upload the image to Postimages
+        with open(image_path, 'rb') as image_file:
+            files = {'file': image_file}
+            data = {
+                'upload_session': '',  # Empty session to avoid issues
+                'expire': '0'  # Set expiration to '0' for no expiration
+            }
+            response = requests.post("https://postimages.org/json", data=data, files=files)
+        
+        # Parse the response
+        if response.status_code == 200:
+            json_response = response.json()
+            img_url = json_response.get('url', {}).get('viewer', '')
+            return img_url
+        else:
+            print(f"Failed to upload to Postimages. Status code: {response.status_code}")
             return None
-
-        file_name = image_url.split('/')[-1]
-        
-        # Save the image temporarily
-        with open(file_name, 'wb') as f:
-            f.write(image_response.content)
-        
-        # Check the file size (Telegraph limit is 5MB)
-        file_size = os.path.getsize(file_name)
-        print(f"File size: {file_size / (1024 * 1024):.2f} MB")
-
-        if file_size > 5 * 1024 * 1024:
-            print("File is too large for Telegraph (exceeds 5MB limit).")
-            os.remove(file_name)
-            return "Image exceeds the 5MB size limit."
-
-        # Upload the image to Telegraph
-        print(f"Uploading {file_name} to Telegraph...")
-        response = telegraph.upload_file(file_name)
-        print(f"Telegraph response: {response}")
-        
-        # Delete the temporary file
-        os.remove(file_name)
-
-        # Return the Telegraph link
-        return 'https://telegra.ph/' + response[0]['src']
     except Exception as e:
-        print(f"Error during upload to Telegraph: {e}")
+        print(f"Error during upload to Postimages: {e}")
         return None
 
 # Handle the /start command to greet the user
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.send_message(message.chat.id, "Welcome! Simply upload an image, and I'll convert it to a Telegraph link.")
+    bot.send_message(message.chat.id, "Welcome! Simply upload an image, and I'll convert it to a Postimages link.")
 
 # Handle image uploads automatically
 @bot.message_handler(content_types=['photo'])
@@ -63,13 +48,27 @@ def handle_image(message):
         image_url = f"https://api.telegram.org/file/bot{bot.token}/{file_info.file_path}"
         print(f"Image URL from Telegram: {image_url}")
 
-        # Try to upload to Telegraph
-        telegraph_url = upload_to_telegraph(image_url)
+        # Download the image from Telegram
+        image_response = requests.get(image_url)
+        if image_response.status_code != 200:
+            bot.send_message(message.chat.id, "Failed to download the image. Please try again.")
+            return
         
-        if telegraph_url:
-            bot.send_message(message.chat.id, f"Here is your Telegraph link: {telegraph_url}")
+        # Save the image locally
+        file_name = file_info.file_path.split('/')[-1]
+        with open(file_name, 'wb') as f:
+            f.write(image_response.content)
+        
+        # Upload to Postimages
+        postimages_url = upload_to_postimages(file_name)
+        
+        # Clean up the local image file
+        os.remove(file_name)
+        
+        if postimages_url:
+            bot.send_message(message.chat.id, f"Here is your Postimages link: {postimages_url}")
         else:
-            bot.send_message(message.chat.id, "Failed to upload the image to Telegraph. Please try again.")
+            bot.send_message(message.chat.id, "Failed to upload the image to Postimages. Please try again.")
     except Exception as e:
         bot.send_message(message.chat.id, "An error occurred while processing the image.")
         print(f"Error: {e}")

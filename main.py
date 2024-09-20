@@ -4,7 +4,7 @@ import requests
 import os
 
 # Initialize the bot with your Telegram API token and the Telegraph API
-bot = telebot.TeleBot('28142132:7461790177:AAFrplKOYxxAF8X-zSigAB8_zFDsORBMjm4')
+bot = telebot.TeleBot('7461790177:AAFrplKOYxxAF8X-zSigAB8_zFDsORBMjm4')
 telegraph = Telegraph()
 telegraph.create_account(short_name='YourBot')
 

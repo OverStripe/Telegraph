@@ -6,7 +6,7 @@ from telegraph import Telegraph
 from datetime import datetime
 
 # Initialize the bot with your Telegram API token
-bot = telebot.TeleBot('7461790177:AAFrplKOYxxAF8X-zSigAB8_zFDsORBMjm4')
+bot = telebot.TeleBot('7461790177:AAERCiMrYi9uK0mCQ7Stkvylw1MeRmDdqgY')
 
 # Initialize Telegraph API
 telegraph = Telegraph()

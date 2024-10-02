@@ -1,20 +1,32 @@
 import requests
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
+import logging
+
+# Enable logging
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 # Your Bot API Key from BotFather
-TELEGRAM_BOT_API_KEY = '7461790177:AAFBBQyYHxpTUnvjEXImvwbikCKIauXvalM'
+TELEGRAM_BOT_API_KEY = '7461790177:AAFoIpQMjDWbv0ATEdedOXDuIGMf7q1BUiA'
 
 # Function to handle the /start command
 async def start(update: Update, context):
+    logger.info("Received /start command")
     await update.message.reply_text("Welcome! Send me an image and I will upload it to Catbox and return the formatted URL.")
 
 # Function to upload image to Catbox and return the formatted link
 async def handle_image(update: Update, context):
+    logger.info("Received an image")
     # Get the image file from the message
     photo_file = await update.message.photo[-1].get_file()
     image_path = 'received_image.jpg'
     await photo_file.download(image_path)  # Save the image temporarily
+
+    logger.info("Image downloaded")
 
     # Upload image to Catbox
     with open(image_path, 'rb') as image_file:
@@ -24,10 +36,12 @@ async def handle_image(update: Update, context):
     if response.status_code == 200:
         # Get the Catbox URL of the uploaded image
         catbox_url = response.text.strip()
+        logger.info(f"Image uploaded to Catbox: {catbox_url}")
 
         # Respond with the formatted output
         await update.message.reply_text(f"/upload {catbox_url} <character_name>")
     else:
+        logger.error("Image upload failed")
         await update.message.reply_text("Image upload failed. Please try again.")
 
 # Main function to set up the bot
@@ -42,6 +56,7 @@ def main():
     application.add_handler(MessageHandler(filters.PHOTO, handle_image))
 
     # Start polling
+    logger.info("Bot started, waiting for updates...")
     application.run_polling()
 
 # Entry point to run the bot

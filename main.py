@@ -3,7 +3,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 # Your Bot API Key from BotFather
-TELEGRAM_BOT_API_KEY = '7461790177:AAGNmb1MY2T49vNvS-SUN-3oH_NhtYhM9Yk'
+TELEGRAM_BOT_API_KEY = '7461790177:AAH59lA1Ix2AmvFf94n8ZcRsuY0QPJ5TtZU'
 
 # Trace.moe API endpoint
 TRACE_MOE_API_URL = 'https://api.trace.moe/search'
@@ -48,6 +48,7 @@ async def handle_image(update: Update, context):
 
 # Main function to set up the bot
 async def main():
+    # Initialize the application using the updated builder pattern
     application = Application.builder().token(TELEGRAM_BOT_API_KEY).build()
 
     # Define command handlers
@@ -56,9 +57,8 @@ async def main():
     # Define a message handler for images
     application.add_handler(MessageHandler(filters.PHOTO, handle_image))
 
-    # Start the bot
-    await application.start_polling()
-    await application.idle()
+    # Start polling (this is the updated method)
+    application.run_polling()
 
 if __name__ == '__main__':
     import asyncio

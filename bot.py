@@ -11,7 +11,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Your Bot API Key from BotFather
-TELEGRAM_BOT_API_KEY = '7461790177:AAFoIpQMjDWbv0ATEdedOXDuIGMf7q1BUiA'
+TELEGRAM_BOT_API_KEY = '7461790177:AAEpD-6QvAoBz5VuIoUv3ozSBjiiSuIe_i0'
 
 # Function to handle the /start command
 async def start(update: Update, context):
@@ -24,7 +24,9 @@ async def handle_image(update: Update, context):
     # Get the image file from the message
     photo_file = await update.message.photo[-1].get_file()
     image_path = 'received_image.jpg'
-    await photo_file.download(image_path)  # Save the image temporarily
+    
+    # Use the correct method to download the file
+    await photo_file.download_to_drive(image_path)  # Save the image temporarily
 
     logger.info("Image downloaded")
 

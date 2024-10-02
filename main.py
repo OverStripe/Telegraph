@@ -1,49 +1,65 @@
 import requests
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 # Your Bot API Key from BotFather
-TELEGRAM_BOT_API_KEY = '7461790177:AAHh5a1DdjfajhppuFcsNV_b9Siuos0vJT8'
+TELEGRAM_BOT_API_KEY = '7461790177:AAGNmb1MY2T49vNvS-SUN-3oH_NhtYhM9Yk'
+
+# Trace.moe API endpoint
+TRACE_MOE_API_URL = 'https://api.trace.moe/search'
 
 # Function to handle the /start command
-def start(update: Update, context: CallbackContext):
-    update.message.reply_text("Welcome! Send me an image and I will upload it to Catbox and return the formatted URL.")
+async def start(update: Update, context):
+    await update.message.reply_text("Welcome! Send me an anime image, and I will try to recognize the character and return the formatted URL.")
 
-# Function to upload image to Catbox and return the formatted link
-def handle_image(update: Update, context: CallbackContext):
+# Function to identify the character and upload the image to Catbox
+async def handle_image(update: Update, context):
     # Get the image file from the message
-    photo_file = update.message.photo[-1].get_file()
-    photo_file.download('received_image.jpg')  # Save the image temporarily
+    photo_file = await update.message.photo[-1].get_file()
+    image_path = 'received_image.jpg'
+    await photo_file.download(image_path)  # Save the image temporarily
+
+    # Identify the character using Trace.moe API
+    with open(image_path, 'rb') as image_file:
+        response = requests.post(TRACE_MOE_API_URL, files={'image': image_file})
+
+    if response.status_code == 200 and response.json().get('result'):
+        # Get the most likely result
+        result = response.json()['result'][0]
+        anime_title = result.get('anime', "Unknown")
+        character_name = result.get('character', "Unknown_Character")
+    else:
+        anime_title = "Unknown"
+        character_name = "Unknown_Character"
 
     # Upload image to Catbox
-    with open('received_image.jpg', 'rb') as image_file:
+    with open(image_path, 'rb') as image_file:
         files = {'fileToUpload': image_file}
-        response = requests.post('https://catbox.moe/user/api.php', files=files, data={'reqtype': 'fileupload'})
+        catbox_response = requests.post('https://catbox.moe/user/api.php', files=files, data={'reqtype': 'fileupload'})
 
-    if response.status_code == 200:
+    if catbox_response.status_code == 200:
         # Get the Catbox URL of the uploaded image
-        catbox_url = response.text.strip()
+        catbox_url = catbox_response.text.strip()
 
-        # Respond with the formatted output
-        update.message.reply_text(f"/upload {catbox_url} <character_name>")
+        # Respond with the formatted output including the character name and anime title
+        await update.message.reply_text(f"/upload {catbox_url} {character_name} ({anime_title})")
     else:
-        update.message.reply_text("Image upload failed. Please try again.")
+        await update.message.reply_text("Image upload failed. Please try again.")
 
 # Main function to set up the bot
-def main():
-    # Initialize the updater and dispatcher with your bot's API key
-    updater = Updater(TELEGRAM_BOT_API_KEY, use_context=True)
-    dp = updater.dispatcher
+async def main():
+    application = Application.builder().token(TELEGRAM_BOT_API_KEY).build()
 
     # Define command handlers
-    dp.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("start", start))
 
     # Define a message handler for images
-    dp.add_handler(MessageHandler(Filters.photo, handle_image))
+    application.add_handler(MessageHandler(filters.PHOTO, handle_image))
 
     # Start the bot
-    updater.start_polling()
-    updater.idle()
+    await application.start_polling()
+    await application.idle()
 
 if __name__ == '__main__':
-    main()
+    import asyncio
+    asyncio.run(main())

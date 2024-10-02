@@ -1,6 +1,7 @@
 import requests
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
+import asyncio
 
 # Your Bot API Key from BotFather
 TELEGRAM_BOT_API_KEY = '7461790177:AAH59lA1Ix2AmvFf94n8ZcRsuY0QPJ5TtZU'
@@ -57,9 +58,20 @@ async def main():
     # Define a message handler for images
     application.add_handler(MessageHandler(filters.PHOTO, handle_image))
 
-    # Start polling (this is the updated method)
+    # Start polling (without using asyncio.run)
     application.run_polling()
 
+# Check if an event loop is already running
 if __name__ == '__main__':
-    import asyncio
-    asyncio.run(main())
+    try:
+        # Check if the event loop is already running
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # If the loop is running, directly call main
+            asyncio.ensure_future(main())
+        else:
+            # If no event loop is running, run normally
+            loop.run_until_complete(main())
+    except RuntimeError:
+        # If no loop is found, create a new one and run the bot
+        asyncio.run(main())

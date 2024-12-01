@@ -1,7 +1,6 @@
 pyTelegramBotAPI==4.5.1
 telegraph==1.4.0
 requests==2.28.1
-aiohttp==3.8.3
-requests
-Pillow
-python-telegram-bot
+aiohttp<3.9
+Pillow>=8.0.0
+python-telegram-bot==20.0

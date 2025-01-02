@@ -13,7 +13,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Your Bot API Key from BotFather
-TELEGRAM_BOT_API_KEY = '7461790177:AAHN6zbtp4X2mQ2d0GbnykdboJF1ALGqL78'
+TELEGRAM_BOT_API_KEY = '7734600401:AAHujM5THyygIqrxBorX4gdB1WGShfKWT5I'
 
 # Target 8K resolution dimensions
 TARGET_WIDTH = 7680
